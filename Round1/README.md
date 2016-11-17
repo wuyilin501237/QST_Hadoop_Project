@@ -82,8 +82,8 @@
      通过map-reduce解决统计问题
      1.在map端进行数据读入，使用正则表达式进行匹配，通过正则表达式将ip和访问时间提取出来，时间以每天为一个段，作为key，ip作为value，在reduce中创建	      一个hash表，去重后输出
      2.解决每天访问量top10的show统计
-     	在map端进行数据读入，通过正则表达式匹配出ip和show，以show/number为key，ip作为value,进行数据分桶，讲相同的show分为一组，输出
-	在reduce端进行遍历，进行排序，输出top10的show
+     	在map端进行数据读入，通过正则表达式匹配出ip和show，以show为key，ip作为value
+	在reduce中创建一个hash表，进行ip去重，将去重后的数据进行排序，统计出top10
      3.完成每天的次日留存统计
 	次日留存即第二天还访问网站的用户，统计第二天的访问ip，通过map-reduce进行处理
 	在map端，将数据进行读入，通过正则表达式匹配ip和时间，以ip作为key，时间作为value，在reduce中创建一个hash表，进行输入，一个ip对应的为两天时	  间的即为次日存留用户
