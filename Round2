@@ -1,0 +1,28 @@
+一、方案设计
+  1.日志存储：
+    将这些文件存储在HDFS上。HDFS会将文件保存三份，安全可靠。将一些实时查询输出存入Hbase中
+  2.统计实现：
+    （1）.统计每日、周、月的UV数量：
+        运行日志文件，map的输出ip为key，value为1.reduce的输出日/周/月为key，value为UV。在reduce中设置全局计数器count，统计ip的数量
+    （2）.统计每日的PV量
+        将需要统计的数据运行，通过mapreduce，以ip为key，value为ip的数量输出，统计ip的数量即为改日的PV量
+    （3）.统计次日、次月留存    
+        <1>.次日留存：
+          将两日数据分别输入，通过mapreduce运行，以ip为key，value为1输出，并将两个文件的输出文件存放在一个文件中，再运行一遍两个文件输出的文件，
+          对该文件的ip进行技术统计，输出以ip做为key，value为ip的个数，其中value为2的即为次日留存
+        <2>.次月留存：
+          原理与次日留存相同，将两月数据文件分别运行，以ip为可以，value为1输出，并将两个文件的输出存放在一个文件中，再运行一遍两个文件的输出文件，
+          对该文件的ip进行技术统计，输出以ip为可以，value为ip的个数，统计value为2的即为次月留存
+    （4）.统计每类网页的跳转率
+          首先需要确定网页有几类。根据用户需求进行具体的统计。
+          map端利用正则匹配出ip、show，ip为key。value为show。reduce端统计ip数量，将ip为1的输出。将输出的值除以总值，并用1减去统计值即为网页的跳转率。
+    （5）.统计每天从baidu跳转过来的pv
+          map端利用正则拆分数据，得到跳转的ip，为key value为1，reduce统计value数目，输出的数目即为baidu跳转的pv
+    （6）.统计每天IOS和Android的UV数
+          map端利用正则拆分输出，得到Android和ios的用户作为key，ip为value。reduce端利用set去重，统计数量，即为UV数量
+    （7）.查询当前的show的访问数量
+          将show放进hbase中进行存储 ，直接从hbase中查询访问数量
+    （8）.查询当前musician的访问数量
+          将musician放进hbase中进行存储 ，直接从hbase中查询访问数量
+二、项目拆解
+    项目于12月15日之前完成
