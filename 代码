@@ -1,0 +1,352 @@
+package UV_PV;
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class PV_Everyday {
+	public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
+
+		@Override
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+			String pattern = "(\\d+.\\d+.\\d+.\\d+) [^ ]* [^ ]* \\[([^ ]* [^ ]*)\\] \"[^ ]+ ([^ ]+) .*\" \\d+ \\d+ \"(.*)\" \"(.*)\"";
+			Pattern p = Pattern.compile(pattern);
+			String line = value.toString();
+			Matcher m = p.matcher(line);
+			if (m.find()) {
+				String Time = m.group(2);
+				String everyday = Time.split(":")[0];
+				context.write(new Text(everyday), new IntWritable(1));
+			}
+		}
+
+	}
+
+	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
+		
+		@Override
+		protected void reduce(Text key, Iterable<IntWritable> value, Context context)
+				throws IOException, InterruptedException {
+			int count = 0;
+			for (IntWritable val : value) {
+				count++;
+			}
+			context.write(key, new IntWritable(count));
+		}
+		}
+	}
+
+	public static void main(String[] args) throws IOException {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "PV_everyday");
+		job.setJarByClass(PV_Everyday.class);
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(IntWritable.class);
+
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(IntWritable.class);
+		job.setNumReduceTasks(1);
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		try {
+			System.exit(job.waitForCompletion(true) ? 0 : 1);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+}
+
+
+package UV_PV;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class UV_Everyday {
+	public static class Map extends Mapper<LongWritable, Text, Text, Text> {
+
+		@Override
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+			String pattern = "(\\d+.\\d+.\\d+.\\d+) [^ ]* [^ ]* \\[([^ ]* [^ ]*)\\] \"[^ ]+ ([^ ]+) .*\" \\d+ \\d+ \"(.*)\" \"(.*)\"";
+			Pattern p = Pattern.compile(pattern);
+			String line = value.toString();
+			Matcher m = p.matcher(line);
+			if (m.find()) {
+				String IP = m.group(1);
+				String Time = m.group(2);
+				String everyday = Time.split(":")[0];
+				context.write(new Text(everyday), new Text(IP));
+			}
+		}
+
+	}
+
+	public static class Reduce extends Reducer<Text, Text, Text, IntWritable> {
+		
+		@Override
+		protected void reduce(Text key, Iterable<Text> value, Context context)
+				throws IOException, InterruptedException {
+			Set<String> set = new HashSet<>();
+			for (Text val : value) {
+				set.add(val.toString());
+				
+			}
+			
+			context.write(key, new IntWritable(set.size()));
+		}
+
+	
+	}
+
+	public static void main(String[] args) throws IOException {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "UV_everyday");
+		job.setJarByClass(UV_Everyday.class);
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(IntWritable.class);
+		job.setNumReduceTasks(1);
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		try {
+			System.exit(job.waitForCompletion(true) ? 0 : 1);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+}
+
+
+package AID.AID;
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class Hbase_LC {
+	public static class Map extends Mapper<LongWritable, Text, Text, Text>{
+		public void map(LongWritable key, Text value, Context context)throws IOException, InterruptedException {
+			String line = value.toString();
+			FileSplit fileSplit=(FileSplit) context.getInputSplit();
+			String filename=fileSplit.getPath().getParent().getName();
+			String pattern = "(\\d+.\\d+.\\d+.\\d+) [^ ]* [^ ]* \\[(.*):\\d+:\\d+:\\d+ [^ ]*\\] \"[^ ]+ ([^ ]+) .*";
+			Pattern r = Pattern.compile(pattern);
+				Matcher m = r.matcher(line);
+				if(m.find()){
+					context.write(new Text(m.group(1)),new Text(filename));
+				}	 
+		}
+	}
+
+	public static class Reduce extends Reducer<Text, Text, Text, Text>{
+		int count=0;
+		protected void reduce(Text key, Iterable<Text> values, Context context)throws IOException, InterruptedException {
+			String l = null ;
+			for (Text text : values) {
+				l=text.toString();
+				break;
+			}
+			while(values.iterator().hasNext()){
+				String t = values.iterator().next().toString();
+				if(!t.equals(l)){
+					count++;
+					break;
+				}
+				
+			}
+		}
+		
+		public void cleanup(Context context) throws IOException, InterruptedException{
+			context.write(new Text("留存"), new Text(count+""));
+		}
+	}
+	 
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf,"wyl");
+		job.setJarByClass(Hbase_LC.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce.class);
+		job.setNumReduceTasks(1);
+		FileInputFormat.setInputPaths(job, new Path(args[0]), new Path(args[1]));
+		FileOutputFormat.setOutputPath(job, new Path(args[2]));
+		boolean status = job.waitForCompletion(true);
+		return;	
+	}
+	
+}
+
+
+package QstEx;
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+
+public class BaiduTz {
+public static class Map extends Mapper<LongWritable, Text, Text, Text>{
+
+		public void map(LongWritable key, Text value, Context context)
+				throws IOException, InterruptedException {
+			String line = value.toString();
+			String pattern = "(\\d+.\\d+.\\d+.\\d+) [^ ]* [^ ]* \\[(.*):\\d+:\\d+:\\d+ [^ ]*\\] \"[^ ]+ ([^ ]+) .*(http://.*baidu.com.*)";///show/.*
+			Pattern r = Pattern.compile(pattern);
+				Matcher m = r.matcher(line);
+				if(m.find()){
+					context.write(new Text(m.group(1)),new Text(""));
+		}	 
+		}
+	}
+
+	public static class Reduce extends Reducer<Text, Text, Text, Text>{
+		int i=0;
+		protected void reduce(Text key, Iterable<Text> values, Context context)throws IOException, InterruptedException {
+			i++;
+		}
+		@SuppressWarnings("unchecked")
+		public void cleanup(Context context) throws IOException, InterruptedException{
+			context.write(new Text("跳转"), new Text(i+""));
+		}
+		
+	}
+	 
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf,"wyl");
+		job.setJarByClass(BaiduTz.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce.class);
+		job.setNumReduceTasks(1);
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		boolean status = job.waitForCompletion(true);
+		return;	
+	}
+	
+}
+
+
+package QstEx;
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+
+public class AI {
+public static class Map extends Mapper<LongWritable, Text, Text, Text>{
+
+		public void map(LongWritable key, Text value, Context context)
+				throws IOException, InterruptedException {
+			String line = value.toString();
+			String pattern = "(\\d+.\\d+.\\d+.\\d+) [^ ]* [^ ]* \\[(.*):\\d+:\\d+:\\d+ [^ ]*\\] \"[^ ]+ ([^ ]+) .*(.*iOS)";///show/.*
+			Pattern r = Pattern.compile(pattern);
+				Matcher m = r.matcher(line);
+				if(m.find()){
+					context.write(new Text(m.group(1)),new Text(""));
+		}	 
+		}
+	}
+
+	public static class Reduce extends Reducer<Text, Text, Text, Text>{
+		int i=0;
+		protected void reduce(Text key, Iterable<Text> values, Context context)throws IOException, InterruptedException {
+			i++;
+		}
+		@SuppressWarnings("unchecked")
+		public void cleanup(Context context) throws IOException, InterruptedException{
+			context.write(new Text("iOS"), new Text(i+""));
+		}
+		
+	}
+	 
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf,"wyl");
+		job.setJarByClass(BaiduTz.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce.class);
+		job.setNumReduceTasks(1);
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		boolean status = job.waitForCompletion(true);
+		return;	
+	}
+	
+}
